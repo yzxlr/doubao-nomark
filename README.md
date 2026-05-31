@@ -3,7 +3,6 @@
   <h1>豆包千问去水印</h1>
 </div>
 <p align="center">
-  <a href="https://github.com/ihmily/doubao-nomark/stargazers"><img src="https://img.shields.io/github/stars/ihmily/doubao-nomark?v=0" alt="GitHub stars"/></a>
   <a href="https://www.python.org/downloads/"><img src="https://img.shields.io/badge/Python-3.10+-blue.svg" alt="Python"/></a>
   <a href="https://hub.docker.com/r/ihmily/doubao-nomark/tags"><img src="https://img.shields.io/docker/pulls/ihmily/doubao-nomark?v=0" alt="Docker Pulls"/></a>
   <a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT"/></a>
@@ -23,7 +22,7 @@
 
 ```bash
 # 1. 克隆项目
-git clone https://github.com/ihmily/doubao-nomark.git
+git clone <repository-url>
 cd doubao-nomark
 
 # 2.使用 uv 创建虚拟环境并安装依赖
@@ -88,7 +87,7 @@ docker run -d -p 8000:8000 --name doubao-app doubao-nomark
 
 ```bash
 # 克隆项目
-git clone https://github.com/ihmily/doubao-nomark.git
+git clone <repository-url>
 cd doubao-nomark
 
 # 以可编辑模式安装
