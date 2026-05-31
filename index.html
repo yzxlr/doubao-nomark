@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="referrer" content="no-referrer">
-    <title>无印豆包</title>
+    <title>豆包千问去水印</title>
     <link rel="icon" type="image/png" sizes="16x16" href="icons/icon16.png">
     <link rel="icon" type="image/png" sizes="48x48" href="icons/icon48.png">
     <link rel="icon" type="image/png" sizes="128x128" href="icons/icon128.png">
@@ -56,6 +56,7 @@
 
         .tab-buttons {
             display: flex;
+            align-items: center;
             gap: 12px;
             margin-bottom: 16px;
         }
@@ -190,6 +191,46 @@
             background: #e0e0e0;
             color: #a0a0a0;
             cursor: not-allowed;
+        }
+
+        .download-controls {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-left: auto;
+        }
+
+        .download-label {
+            color: #1f1f1f;
+            font-size: 14px;
+            font-weight: 500;
+            white-space: nowrap;
+        }
+
+        .download-controls .input-field {
+            width: min(360px, 28vw);
+            height: 39px;
+            padding: 8px 12px;
+            background: #ffffff;
+            font-size: 14px;
+        }
+
+        .download-controls .btn,
+        .download-controls .action-btn {
+            height: 39px;
+            padding: 8px 16px;
+            font-size: 14px;
+            white-space: nowrap;
+        }
+
+        .download-controls .action-btn {
+            flex: none;
+        }
+
+        .download-status {
+            margin: -6px 0 12px 0;
+            font-size: 13px;
+            color: #166534;
         }
 
         .loading {
@@ -451,6 +492,31 @@
                 font-size: 16px;
             }
 
+            .tab-buttons {
+                flex-wrap: wrap;
+            }
+
+            .download-controls {
+                width: 100%;
+                margin-left: 0;
+                flex-wrap: wrap;
+            }
+
+            .download-controls .input-field {
+                width: auto;
+                flex: 1;
+                min-width: 0;
+            }
+
+            .download-controls .btn {
+                width: auto;
+                min-width: 128px;
+            }
+
+            .download-controls .action-btn {
+                min-width: 112px;
+            }
+
             .images-grid {
                 grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
                 gap: 12px;
@@ -644,7 +710,7 @@
     <div id="app">
         <div class="header">
             <div class="header-top">
-                <h1>无印豆包</h1>
+                <h1>豆包千问去水印</h1>
                 <div v-if="currentTab === 'image' && images.length > 0" class="image-count">
                     已提取 <span>{{ images.length }}</span> 张图片
                 </div>
@@ -672,6 +738,29 @@
                     >
                         视频解析
                     </button>
+                    <div class="download-controls">
+                        <span class="download-label">下载路径</span>
+                        <input
+                            v-model="downloadDir"
+                            type="text"
+                            class="input-field"
+                            placeholder="下载文件路径"
+                        >
+                        <button
+                            class="action-btn"
+                            @click="selectDownloadDir"
+                            :disabled="choosingDir || bulkDownloading"
+                        >
+                            {{ choosingDir ? '选择中...' : '选择文件夹' }}
+                        </button>
+                        <button
+                            class="btn btn-primary"
+                            @click="downloadAll"
+                            :disabled="bulkDownloading || currentResources.length === 0"
+                        >
+                            {{ bulkDownloading ? '下载中...' : '全部下载 ' + currentResources.length + ' 个' }}
+                        </button>
+                    </div>
                 </div>
 
                 <div v-if="error" class="alert alert-error">
@@ -705,6 +794,10 @@
                         {{ loading ? '解析中...' : '解析' }}
                     </button>
                 </div>
+            </div>
+
+            <div v-if="bulkDownloadMessage" class="download-status">
+                {{ bulkDownloadMessage }}
             </div>
 
             <div v-if="currentTab === 'image' && images.length > 0">
@@ -799,7 +892,7 @@
                     开源项目
                 </a>
                 <div class="footer-divider"></div>
-                <span class="footer-text">© 2026 无印豆包</span>
+                <span class="footer-text">© 2026 豆包千问去水印</span>
             </div>
         </div>
     </div>
@@ -820,8 +913,18 @@
                     copiedIndex: null,
                     videoDownloadingIndex: null,
                     videoCopiedIndex: null,
+                    bulkDownloading: false,
+                    choosingDir: false,
+                    bulkDownloadMessage: '',
+                    downloadDir: '~/Downloads/doubao-nomark',
                     apiBaseUrl: window.location.origin,
                     urlRegex: /https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)/g
+                }
+            },
+
+            computed: {
+                currentResources() {
+                    return this.currentTab === 'image' ? this.images : this.videos;
                 }
             },
 
@@ -868,6 +971,7 @@
                     this.copiedIndex = null;
                     this.videoDownloadingIndex = null;
                     this.videoCopiedIndex = null;
+                    this.bulkDownloadMessage = '';
                 },
                 async parseUrl() {
                     if (!this.url.trim()) {
@@ -890,6 +994,7 @@
                     this.copiedIndex = null;
                     this.videoDownloadingIndex = null;
                     this.videoCopiedIndex = null;
+                    this.bulkDownloadMessage = '';
 
                     try {
                         if (this.currentTab === 'image') {
@@ -924,6 +1029,73 @@
                         }
                     } finally {
                         this.loading = false;
+                    }
+                },
+                async downloadAll() {
+                    if (this.currentResources.length === 0) {
+                        this.showError('没有可下载的资源');
+                        return;
+                    }
+
+                    this.bulkDownloading = true;
+                    this.bulkDownloadMessage = '';
+                    this.error = '';
+
+                    const type = this.currentTab === 'image' ? 'image' : 'video';
+                    const resources = this.currentResources
+                        .filter(item => item && item.url)
+                        .map((item, index) => ({
+                            url: item.url,
+                            type,
+                            filename: type === 'image'
+                                ? `doubao_image_${index + 1}.jpg`
+                                : `doubao_video_${index + 1}.mp4`
+                        }));
+
+                    try {
+                        const response = await axios.post(`${this.apiBaseUrl}/download-all`, {
+                            resources,
+                            download_dir: this.downloadDir || '~/Downloads/doubao-nomark'
+                        });
+
+                        const data = response.data;
+                        if (data.downloaded_count > 0) {
+                            this.bulkDownloadMessage = `已下载 ${data.downloaded_count} 个文件到 ${data.download_dir}`;
+                        }
+
+                        if (data.failed && data.failed.length > 0) {
+                            this.showError(`${data.failed.length} 个文件下载失败，请检查链接或网络`);
+                        }
+                    } catch (error) {
+                        console.error(error);
+                        if (error.response) {
+                            this.showError(error.response.data.detail || '批量下载失败');
+                        } else if (error.request) {
+                            this.showError('无法连接到服务器，请确保后端服务正在运行');
+                        } else {
+                            this.showError('批量下载发生未知错误');
+                        }
+                    } finally {
+                        this.bulkDownloading = false;
+                    }
+                },
+                async selectDownloadDir() {
+                    this.choosingDir = true;
+                    this.error = '';
+
+                    try {
+                        const response = await axios.get(`${this.apiBaseUrl}/select-download-dir`);
+                        if (response.data.success && response.data.download_dir) {
+                            this.downloadDir = response.data.download_dir;
+                            this.bulkDownloadMessage = '';
+                        }
+                    } catch (error) {
+                        console.error(error);
+                        if (error.response && error.response.status !== 400) {
+                            this.showError(error.response.data.detail || '选择文件夹失败');
+                        }
+                    } finally {
+                        this.choosingDir = false;
                     }
                 },
                 viewImage(url) {
@@ -1021,6 +1193,10 @@
                 if (savedTab) {
                     this.currentTab = savedTab;
                 }
+                const savedDownloadDir = localStorage.getItem('downloadDir');
+                if (savedDownloadDir) {
+                    this.downloadDir = savedDownloadDir;
+                }
             },
             watch: {
                 url(newUrl) {
@@ -1030,6 +1206,11 @@
                 },
                 currentTab(newTab) {
                     localStorage.setItem('lastTab', newTab);
+                },
+                downloadDir(newDir) {
+                    if (newDir) {
+                        localStorage.setItem('downloadDir', newDir);
+                    }
                 }
             }
         }).mount('#app');

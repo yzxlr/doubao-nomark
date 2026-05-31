@@ -1,10 +1,10 @@
 // ==UserScript==
-// @name         无印豆包 - 素材提取
+// @name         豆包千问去水印 - 素材提取
 // @namespace    http://tampermonkey.net/
 // @version      1.0.13
 // @description  在豆包对话页面提取无水印图片/视频，支持一键下载
 // @description:en Extract watermark-free images/videos from Doubao chat pages with one-click download
-// @author       无印豆包
+// @author       豆包千问去水印
 // @homepage     https://github.com/ihmily/doubao-nomark
 // @supportURL   https://github.com/ihmily/doubao-nomark/issues
 // @updateURL    https://github.com/ihmily/doubao-nomark/raw/main/doubao-nomark.user.js
@@ -24,11 +24,11 @@
 (function() {
     'use strict';
 
-    console.log('%c[无印豆包] 脚本开始执行', 'color: #667eea; font-size: 14px; font-weight: bold');
+    console.log('%c[豆包千问去水印] 脚本开始执行', 'color: #667eea; font-size: 14px; font-weight: bold');
     const pageWindow = typeof unsafeWindow !== 'undefined' ? unsafeWindow : window;
     const NativeReadableStream = pageWindow.ReadableStream || ReadableStream;
     const NativeResponse = pageWindow.Response || Response;
-    console.log('[无印豆包] 当前 URL:', pageWindow.location.href);
+    console.log('[豆包千问去水印] 当前 URL:', pageWindow.location.href);
 
     let chatImages = [];
     let chatVideos = [];
@@ -55,7 +55,7 @@
         if (!videoInfo || !videoInfo.url) return;
         if (chatVideos.find(v => v.vid === videoInfo.vid || v.url === videoInfo.url)) return;
         chatVideos.push(videoInfo);
-        console.log('[无印豆包] 获取到新视频:', videoInfo.vid, videoInfo.url);
+        console.log('[豆包千问去水印] 获取到新视频:', videoInfo.vid, videoInfo.url);
         updateButtonCount();
     }
 
@@ -64,7 +64,7 @@
     
     pageWindow.XMLHttpRequest.prototype.open = function(method, url, ...args) {
         this._url = url;
-        // console.log('[无印豆包] XHR open:', method, url);
+        // console.log('[豆包千问去水印] XHR open:', method, url);
         return originalXHROpen.apply(this, [method, url, ...args]);
     };
     
@@ -74,34 +74,34 @@
             if (url && (url.includes('/im/chain/single'))) {
                 try {
                     const data = JSON.parse(this.responseText);
-                    // console.log('[无印豆包] XHR 拦截到聊天接口数据:', data);
-                    // console.log('[无印豆包] downlink_body 存在:', !!data?.downlink_body);
-                    // console.log('[无印豆包] pull_singe_chain_downlink_body 存在:', !!data?.downlink_body?.pull_singe_chain_downlink_body);
-                    // console.log('[无印豆包] messages 存在:', !!data?.downlink_body?.pull_singe_chain_downlink_body?.messages);
+                    // console.log('[豆包千问去水印] XHR 拦截到聊天接口数据:', data);
+                    // console.log('[豆包千问去水印] downlink_body 存在:', !!data?.downlink_body);
+                    // console.log('[豆包千问去水印] pull_singe_chain_downlink_body 存在:', !!data?.downlink_body?.pull_singe_chain_downlink_body);
+                    // console.log('[豆包千问去水印] messages 存在:', !!data?.downlink_body?.pull_singe_chain_downlink_body?.messages);
                     
                     const messages = data?.downlink_body?.pull_singe_chain_downlink_body?.messages;
                     if (messages && Array.isArray(messages)) {
-                        console.log('[无印豆包] 开始解析 messages，数量:', messages.length);
+                        console.log('[豆包千问去水印] 开始解析 messages，数量:', messages.length);
                         parseChatHistoryImages(messages);
                     } else {
-                        console.warn('[无印豆包] messages 不是数组或不存在');
+                        console.warn('[豆包千问去水印] messages 不是数组或不存在');
                     }
                 } catch (e) {
-                    console.error('[无印豆包] XHR 解析聊天数据失败:', e);
+                    console.error('[豆包千问去水印] XHR 解析聊天数据失败:', e);
                 }
             }
         });
         return originalXHRSend.apply(this, args);
     };
     
-    console.log('[无印豆包] XHR 拦截已安装');
+    console.log('[豆包千问去水印] XHR 拦截已安装');
 
     const originalFetch = pageWindow.fetch;
     pageWindow.fetch = async function(...args) {
         const url = args[0];
 
         if (url && (typeof url === 'string') && url.includes('qianwen.com/api/v1/session/msg/list')) {
-            console.log('[无印豆包] 检测到千问 session msg list 请求:', url);
+            console.log('[豆包千问去水印] 检测到千问 session msg list 请求:', url);
             const response = await originalFetch.apply(this, args);
             response.clone().json().then(data => {
                 const chats = data.data?.list || [];
@@ -114,7 +114,7 @@
         }
 
         if (url && (typeof url === 'string') && url.includes('qianwen.com/api/v1/share/info')) {
-            console.log('[无印豆包] 检测到千问 share chat 请求:', url);
+            console.log('[豆包千问去水印] 检测到千问 share chat 请求:', url);
             const response = await originalFetch.apply(this, args);
             response.clone().json().then(data => {
                 const chats = data.data.session?.record_list || [];
@@ -127,7 +127,7 @@
         }
 
         if (url && (typeof url === 'string') && url.includes('qianwen.com/api/v1/chat/snap')) {
-            console.log('[无印豆包] 检测到千问 EventStream 请求:', url);
+            console.log('[豆包千问去水印] 检测到千问 EventStream 请求:', url);
             
             const response = await originalFetch.apply(this, args);
             const reader = response.body.getReader();
@@ -155,7 +155,7 @@
                                     const data = JSON.parse(jsonStr);
                                     parseQianwenMessages(data?.data?.messages);
                                 } catch (e) {
-                                    console.warn('[无印豆包][千问] data 行解析失败:', e.message);
+                                    console.warn('[豆包千问去水印][千问] data 行解析失败:', e.message);
                                 }
                             } else if (line.trim() === '') {
                                 waitingForData = false;
@@ -176,7 +176,7 @@
         }
         
         if (url && url.includes('/chat/completion')) {
-            console.log('[无印豆包] ✨ 检测到 EventStream 请求:', url);
+            console.log('[豆包千问去水印] ✨ 检测到 EventStream 请求:', url);
             
             const response = await originalFetch.apply(this, args);
             const reader = response.body.getReader();
@@ -189,7 +189,7 @@
                         if (done) break;
                         
                         const chunk = decoder.decode(value, { stream: true });
-                        // console.log('[无印豆包] 收到数据块:', chunk.substring(0, 100));
+                        // console.log('[豆包千问去水印] 收到数据块:', chunk.substring(0, 100));
                         
                         const lines = chunk.split('\n');
                         for (const line of lines) {
@@ -203,7 +203,7 @@
                                         }
                                     }
                                 } catch (e) {
-                                    console.log('[无印豆包] 解析行失败:', e.message);
+                                    console.log('[豆包千问去水印] 解析行失败:', e.message);
                                 }
                             }
                         }
@@ -225,7 +225,7 @@
         return originalFetch.apply(this, args);
     };
     
-    console.log('[无印豆包] Fetch 拦截已安装');
+    console.log('[豆包千问去水印] Fetch 拦截已安装');
 
     function parseQianwenMessages(messages) {
         if (!Array.isArray(messages)) {
@@ -248,7 +248,7 @@
                     const { url, width = 0, height = 0 } = imageObj;
                     if (!chatImages.find(img => img.url === url)) {
                         chatImages.push({ url, width, height });
-                        console.log('[无印豆包][千问] 获取到图片:', url, `${width} × ${height}`);
+                        console.log('[豆包千问去水印][千问] 获取到图片:', url, `${width} × ${height}`);
                         updateButtonCount();
                     }
                 }
@@ -318,7 +318,7 @@
                 try {
                     eventData = JSON.parse(data.event_data);
                 } catch (e) {
-                    console.log('[无印豆包] 解析 event_data 失败:', e);
+                    console.log('[豆包千问去水印] 解析 event_data 失败:', e);
                     return;
                 }
                 
@@ -330,7 +330,7 @@
                 try {
                     messageContent = JSON.parse(eventData.message.content);
                 } catch (e) {
-                    console.log('[无印豆包] 解析 message.content 失败:', e);
+                    console.log('[豆包千问去水印] 解析 message.content 失败:', e);
                     return;
                 }
                 if (!messageContent.creations || !Array.isArray(messageContent.creations)) {
@@ -364,20 +364,20 @@
                         
                         if (imageUrl && !chatImages.find(img => img.url === imageUrl)) {
                             chatImages.push({ url: imageUrl, width, height });
-                            console.log('[无印豆包] 获取到新图片:', imageUrl, `${width} × ${height}`);
+                            console.log('[豆包千问去水印] 获取到新图片:', imageUrl, `${width} × ${height}`);
                             updateButtonCount();
                         }
                     }
                 }
             }
         } catch (e) {
-            console.error('[无印豆包] 解析 StreamChunk 失败:', e);
+            console.error('[豆包千问去水印] 解析 StreamChunk 失败:', e);
         }
     }
 
     async function getDoubaoVideoInfo(vid) {
         if (!vid) {
-            console.warn('[无印豆包] getDoubaoVideoInfo: vid 为空');
+            console.warn('[豆包千问去水印] getDoubaoVideoInfo: vid 为空');
             return null;
         }
 
@@ -414,7 +414,7 @@
             const result = await response.json();
 
             if (!result || !result.data) {
-                console.warn('[无印豆包] API返回数据格式异常，可能链接已失效:', result);
+                console.warn('[豆包千问去水印] API返回数据格式异常，可能链接已失效:', result);
                 return null;
             }
 
@@ -432,10 +432,10 @@
                 url: originalMediaInfo.main_url || '',
             };
 
-            console.log('[无印豆包] 获取无水印视频成功:', vid, videoInfo.url);
+            console.log('[豆包千问去水印] 获取无水印视频成功:', vid, videoInfo.url);
             return videoInfo;
         } catch (e) {
-            console.error('[无印豆包] 获取视频播放信息失败:', e);
+            console.error('[豆包千问去水印] 获取视频播放信息失败:', e);
             return null;
         }
     }
@@ -472,7 +472,7 @@
                                     
                                     if (imageUrl && !newImages.find(img => img.url === imageUrl)) {
                                         newImages.push({ url: imageUrl, width, height });
-                                        console.log('[无印豆包] 找到图片:', imageUrl, `${width} × ${height}`);
+                                        console.log('[豆包千问去水印] 找到图片:', imageUrl, `${width} × ${height}`);
                                     }
                                 }
                             }
@@ -480,17 +480,17 @@
                     }
                     
                 } catch (e) {
-                    console.log('[无印豆包] 解析消息失败:', e);
+                    console.log('[豆包千问去水印] 解析消息失败:', e);
                     continue;
                 }
             }
         } catch (e) {
-            console.log('[无印豆包] 解析消息失败:', e);
+            console.log('[豆包千问去水印] 解析消息失败:', e);
         }
         
         if (newImages.length > 0) {
             chatImages = newImages;
-            console.log('[无印豆包] 更新聊天图片，共', chatImages.length, '张');
+            console.log('[豆包千问去水印] 更新聊天图片，共', chatImages.length, '张');
             updateButtonCount();
         }
     }
@@ -509,7 +509,7 @@
                     for (const data of jsonData) {
                         if (typeof data === 'object' && data?.data?.message_snapshot?.message_list) {
                             const messageSnapshot = data.data.message_snapshot.message_list;
-                            console.log('[无印豆包] 找到消息列表，共', messageSnapshot.length, '条消息');
+                            console.log('[豆包千问去水印] 找到消息列表，共', messageSnapshot.length, '条消息');
                             
                             for (const message of messageSnapshot) {
                                 for (const block of message.content_block || []) {
@@ -541,7 +541,7 @@
                                                                 width: width,
                                                                 height: height
                                                             });
-                                                            console.log('[无印豆包] 找到图片:', imageUrl, `${width} × ${height}`);
+                                                            console.log('[豆包千问去水印] 找到图片:', imageUrl, `${width} × ${height}`);
                                                         }
                                                     }
                                                 }
@@ -555,15 +555,15 @@
                         }
                     }
                     
-                    console.log('[无印豆包] 提取完成，共找到', imageList.length, '张图片');
+                    console.log('[豆包千问去水印] 提取完成，共找到', imageList.length, '张图片');
                     return imageList;
                 }
             }
             
-            console.error('[无印豆包] 未找到任何可用的数据源');
+            console.error('[豆包千问去水印] 未找到任何可用的数据源');
             return [];
         } catch (error) {
-            console.error('[无印豆包] 提取图片失败:', error);
+            console.error('[豆包千问去水印] 提取图片失败:', error);
             return [];
         }
     }
@@ -571,20 +571,20 @@
     function extractImages() {
         
         if (pageWindow.location.hostname.includes('doubao.com') && pageWindow.location.pathname.includes('/chat/')) {
-            console.log('[无印豆包] 豆包聊天界面，返回已缓存的', chatImages.length, '张图片');
+            console.log('[豆包千问去水印] 豆包聊天界面，返回已缓存的', chatImages.length, '张图片');
             return chatImages;
         } else if (pageWindow.location.hostname.includes('qianwen.com') && pageWindow.location.pathname.includes('/chat/')) {
             return chatImages;
         }else{
             const images = extractSharePageImages();
             chatImages = images;
-            console.log('[无印豆包] 豆包分享界面，返回已缓存的', images.length, '张图片');
+            console.log('[豆包千问去水印] 豆包分享界面，返回已缓存的', images.length, '张图片');
             return images;
         }
     }
 
     function extractVideos() {
-        console.log('[无印豆包] 当前视频缓存数:', chatVideos.length);
+        console.log('[豆包千问去水印] 当前视频缓存数:', chatVideos.length);
         return chatVideos;
     }
 
@@ -599,18 +599,18 @@
             const finish = () => {
                 if (settled) return;
                 settled = true;
-                console.log('[无印豆包] 下载完成:', filename);
+                console.log('[豆包千问去水印] 下载完成:', filename);
                 resolve();
             };
 
             const fail = (error) => {
                 if (settled) return;
                 settled = true;
-                console.error('[无印豆包] 下载失败:', error);
+                console.error('[豆包千问去水印] 下载失败:', error);
                 reject(error);
             };
 
-            console.log('[无印豆包] 开始下载:', url);
+            console.log('[豆包千问去水印] 开始下载:', url);
 
             if (typeof GM_download === 'function') {
                 try {
@@ -659,7 +659,7 @@
                 try {
                     if (abortDownload) abortDownload();
                 } catch (error) {
-                    console.warn('[无印豆包] 取消下载失败:', error);
+                    console.warn('[豆包千问去水印] 取消下载失败:', error);
                 }
                 rejectDownload(new Error('下载已取消'));
             },
@@ -1326,7 +1326,7 @@
                             开源项目
                         </a>
                         <div class="footer-divider"></div>
-                        <span class="footer-text">© 2026 无印豆包</span>
+                        <span class="footer-text">© 2026 豆包千问去水印</span>
                     </div>
                 </div>
             </div>
@@ -1457,7 +1457,7 @@
                     if (batchCancelRequested || error?.message === '下载已取消') {
                         break;
                     }
-                    console.error('[无印豆包] 批量下载单项失败:', error);
+                    console.error('[豆包千问去水印] 批量下载单项失败:', error);
                 } finally {
                     currentDownloadTask = null;
                 }
@@ -1690,7 +1690,7 @@
     const MAX_RETRY = 10;
 
     function initScript() {
-        console.log('[无印豆包] 脚本已加载');
+        console.log('[豆包千问去水印] 脚本已加载');
         
         if (pageWindow.location.pathname.includes('/chat/')) {
             createFloatingButton();
@@ -1703,11 +1703,11 @@
         if (!hasScriptData && !hasRouterData) {
             initRetryCount++;
             if (initRetryCount < MAX_RETRY) {
-                console.warn(`[无印豆包] 页面数据仍未加载，等待中... (${initRetryCount}/${MAX_RETRY})`);
+                console.warn(`[豆包千问去水印] 页面数据仍未加载，等待中... (${initRetryCount}/${MAX_RETRY})`);
                 setTimeout(initScript, 500);
                 return;
             } else {
-                console.warn('[无印豆包] 页面数据加载超时，仍创建按钮（可能无法提取历史图片）');
+                console.warn('[豆包千问去水印] 页面数据加载超时，仍创建按钮（可能无法提取历史图片）');
             }
         }
 

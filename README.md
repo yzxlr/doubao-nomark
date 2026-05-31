@@ -1,6 +1,6 @@
 <div align="center">
-  <img src="icons/logo.svg" alt="无印豆包 Logo" width="120"/>
-  <h1>无印豆包</h1>
+  <img src="icons/logo.svg" alt="豆包千问去水印 Logo" width="120"/>
+  <h1>豆包千问去水印</h1>
 </div>
 <p align="center">
   <a href="https://github.com/ihmily/doubao-nomark/stargazers"><img src="https://img.shields.io/github/stars/ihmily/doubao-nomark?v=0" alt="GitHub stars"/></a>
@@ -216,7 +216,7 @@ video_data = await doubao_video_parse(
 
 **在线安装：**
 
-1. 访问Edge扩展安装页面：[无印豆包 - 素材提取](https://microsoftedge.microsoft.com/addons/detail/hjlplfcnpgglfdjafekcgahffdengaij)
+1. 访问Edge扩展安装页面：[豆包千问去水印 - 素材提取](https://microsoftedge.microsoft.com/addons/detail/hjlplfcnpgglfdjafekcgahffdengaij)
 2. 点击「获取」按钮即可完成安装
 
 **使用说明：**

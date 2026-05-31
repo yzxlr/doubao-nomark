@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "无印豆包 - 素材提取",
+  "name": "豆包千问去水印 - 素材提取",
   "version": "1.0.5",
   "description": "在豆包/千问对话页面提取无水印图片/视频，支持一键下载",
   "icons": {
